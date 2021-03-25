@@ -1,5 +1,7 @@
-﻿using BlogProject.Models;
+﻿using BlogProject.Data;
+using BlogProject.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -12,15 +14,31 @@ namespace BlogProject.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly BlogContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger,
+            BlogContext context)
         {
             _logger = logger;
+            _context = context;
         }
-
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int? id)
         {
-            return View();
+            User user = new User();
+
+            if (id == 0 || id == null)
+            {
+                return View(user);
+                
+            }
+            else
+            {
+                user = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
+                if (user != null) user.LoggedIn = true;
+                return View(user);
+            }
+                
+           
         }
 
         public IActionResult Privacy()
