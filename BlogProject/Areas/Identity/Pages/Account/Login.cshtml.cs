@@ -93,8 +93,9 @@ namespace BlogProject.Areas.Identity.Pages.Account
                 if (user.Password == Input.Password) user.LoggedIn = true;
                 if (user.LoggedIn)
                 {
+                    BlogProject.Startup.user = user;
                     _logger.LogInformation("User logged in.");
-                    return RedirectToPage("/Home/Index", new { id = user.Id });
+                    return Redirect(returnUrl);
                 }
                 //if (result.RequiresTwoFactor)
                 //{

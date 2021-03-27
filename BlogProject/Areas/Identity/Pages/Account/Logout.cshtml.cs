@@ -31,9 +31,11 @@ namespace BlogProject.Areas.Identity.Pages.Account
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
+            BlogProject.Startup.user = new Models.User();
+
             if (returnUrl != null)
             {
-                return RedirectToPage("/Home/Index", new { id = 0 });
+                return Redirect(returnUrl);
             }
             else
             {

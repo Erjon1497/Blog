@@ -57,16 +57,15 @@ namespace BlogProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,UserId,Content,LikeCount,CommentCount")] Posts posts)
+        public async Task<IActionResult> Create([Bind("Id,UserId,Title,Content,LikeCount,CommentCount,Image")] Posts posts)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(posts);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", posts.UserId);
-            return View(posts);
+            posts.Liked = false;
+            posts.LikeCount = 0;
+            posts.CommentCount = 0;
+            posts.CreatedOn = DateTime.Now;
+            _context.Add(posts);
+            await _context.SaveChangesAsync();
+            return Redirect("~/");
         }
 
         // GET: Posts/Edit/5
@@ -91,7 +90,7 @@ namespace BlogProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,Content,LikeCount,CommentCount")] Posts posts)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,Content,LikeCount,CommentCount,Image")] Posts posts)
         {
             if (id != posts.Id)
             {
@@ -150,6 +149,32 @@ namespace BlogProject.Controllers
             _context.Posts.Remove(posts);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Like(int? id)
+        {
+            Posts posts = new Posts();
+            posts = BlogProject.Startup.allPosts.Where(p => p.Id == id).FirstOrDefault();
+            if(posts.Liked == false)
+            {
+                posts.LikeCount += 1;
+                BlogProject.Startup.allPosts.Where(p => p.Id == id).FirstOrDefault().Liked = true;
+            }
+            else
+            {
+                posts.LikeCount -= 1;
+                BlogProject.Startup.allPosts.Where(p => p.Id == id).FirstOrDefault().Liked = false;
+            }
+            try
+            {
+                _context.Update(posts);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return NotFound();
+            }
+            return Redirect("~/");
         }
 
         private bool PostsExists(int id)

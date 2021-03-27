@@ -1,4 +1,5 @@
 using BlogProject.Data;
+using BlogProject.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -15,6 +16,9 @@ namespace BlogProject
 {
     public class Startup
     {
+        public static User user = new User();
+        public static List<User> allusers;
+        public static List<Posts> allPosts;
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;

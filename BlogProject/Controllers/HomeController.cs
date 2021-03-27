@@ -1,6 +1,7 @@
 ﻿using BlogProject.Data;
 using BlogProject.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -22,23 +23,21 @@ namespace BlogProject.Controllers
             _logger = logger;
             _context = context;
         }
-        public async Task<IActionResult> Index(int? id)
+        public async Task<IActionResult> Index()
         {
-            User user = new User();
+            List<Comments> comments = new List<Comments>();
+            BlogProject.Startup.allPosts = await _context.Posts.ToListAsync();
+            foreach(Posts p in BlogProject.Startup.allPosts)
+            {
+                if(p.CommentCount > 0)
+                {
+                    comments = await _context.Comments.Where(c => c.PostId == p.Id).ToListAsync();
+                }
+                BlogProject.Startup.allPosts.Where(allP => allP.Id == p.Id).FirstOrDefault().PostComments = comments;
+            }
+            BlogProject.Startup.allusers = await _context.Users.ToListAsync();
 
-            if (id == 0 || id == null)
-            {
-                return View(user);
-                
-            }
-            else
-            {
-                user = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
-                if (user != null) user.LoggedIn = true;
-                return View(user);
-            }
-                
-           
+            return View();  
         }
 
         public IActionResult Privacy()
@@ -50,6 +49,29 @@ namespace BlogProject.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,UserId,PostId,Content,LikeCount")] Comments comments)
+        {
+            comments.CreatedOn = DateTime.Now;
+            comments.LikeCount = 0;
+            _context.Add(comments);
+            await _context.SaveChangesAsync();
+            Posts posts = new Posts();
+            posts = BlogProject.Startup.allPosts.Where(p => p.Id == comments.PostId).FirstOrDefault();
+            posts.CommentCount += 1;
+            try
+            {
+                _context.Update(posts);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return NotFound();     
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

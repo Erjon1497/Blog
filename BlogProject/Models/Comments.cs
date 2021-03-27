@@ -14,6 +14,8 @@ namespace BlogProject.Models
         [NotNull]
         public string Content { get; set; }
         public int LikeCount { get; set; }
+        public DateTime CreatedOn { get; set; }
+
 
         public User User { get; set; }
         public Posts Post { get; set; }
